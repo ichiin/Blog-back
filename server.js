@@ -36,7 +36,6 @@ blogRoutes.route('/log').post(function (req, res){
 blogRoutes.route('/add').post(function(req, res) {
     let todo = new Blog(req.query);
     let title = req.query.post_title;
-    console.log('??')
     todo.save()
         .then(async todo => {
             res.status(200).json({'todo': 'todo added successfully'});
@@ -74,6 +73,7 @@ blogRoutes.route('/add').post(function(req, res) {
         })
         .catch(err => {
             res.status(400).send('adding new todo failed');
+            console.log(err);
         });
 });
 
