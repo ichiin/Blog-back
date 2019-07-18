@@ -9,7 +9,6 @@ const blogRoutes = express.Router();
 let Blog = require('./blog_model')
 let User = require('./user_model');
 
-app.use(cors());
 app.use(bodyParser.json());
 
 mongoose.connect("mongodb://root:root@localhost:27017/blog?authSource=admin", { useNewUrlParser: true });
@@ -34,7 +33,10 @@ blogRoutes.route('/log').post(function (req, res){
 })
 
 blogRoutes.route('/add').post(function(req, res) {
+    console.log('hmm');
     let todo = new Blog(req.query);
+    console.log('----------');
+    console.log(todo)
     let title = req.query.post_title;
     todo.save()
         .then(async todo => {
@@ -119,7 +121,7 @@ blogRoutes.route('/deletePost').post(function(req, res)
 
 });
 
-app.use('/blog', blogRoutes)
+app.use('/blog', blogRoutes);
 
 app.listen(PORT, (_) => {
     console.log('Server is running on Port: ' + PORT);
