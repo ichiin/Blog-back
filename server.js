@@ -9,7 +9,11 @@ const blogRoutes = express.Router();
 let Blog = require('./blog_model')
 let User = require('./user_model');
 
-app.use(bodyParser.json());
+
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true, limit: '500mb' }));
+app.use(bodyParser.json({limit: '500mb'}));
+
 
 mongoose.connect("mongodb://root:root@localhost:27017/blog?authSource=admin", { useNewUrlParser: true });
 const connection = mongoose.connection;
@@ -122,6 +126,22 @@ blogRoutes.route('/deletePost').post(function(req, res)
 });
 
 app.use('/blog', blogRoutes);
+
+app.use((err, req, res, next) => {
+    // set locals, only providing error in development
+    console.log('erreur - headers', req.headers)
+    console.log('erreur - url', req.url)
+    console.log('erreur - baseUrl', req.baseUrl)
+    console.log('erreur - method', req.method)
+    console.log('erreur - body', req.body)
+    console.log(err)
+    console.log(err.message)
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error');
+});
 
 app.listen(PORT, (_) => {
     console.log('Server is running on Port: ' + PORT);
