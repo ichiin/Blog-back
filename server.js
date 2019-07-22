@@ -146,3 +146,13 @@ app.use((err, req, res, next) => {
 app.listen(PORT, (_) => {
     console.log('Server is running on Port: ' + PORT);
 });
+
+app.use((err, req, res, next) => {
+    console.log('sad boi');
+    next();
+});
+
+
+module.exports = app;
+
+
