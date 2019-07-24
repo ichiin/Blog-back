@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express();
 const bodyParser = require('body-parser');
-const cors = require ('cors')
+const cors = require('cors')
 const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const PORT = 4000;
@@ -9,48 +9,40 @@ const blogRoutes = express.Router();
 let Blog = require('./blog_model')
 let User = require('./user_model');
 
-
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true, limit: '500mb' }));
+app.use(bodyParser.urlencoded({extended: true, limit: '500mb'}));
 app.use(bodyParser.json({limit: '500mb'}));
 
-
-mongoose.connect("mongodb://root:root@localhost:27017/blog?authSource=admin", { useNewUrlParser: true });
+mongoose.connect("mongodb://root:root@localhost:27017/blog?authSource=admin", {useNewUrlParser: true});
 const connection = mongoose.connection;
 
-connection.once('open', function() {
+connection.once('open', function () {
     console.log("MongoDB database connection established successfully");
 })
 
-blogRoutes.route('/log').post(function (req, res){
-    console.log(req.query);
-    let username = req.query.username;
-    let pw = req.query.password;
-    User.findOne({username: username, password: pw}).then( doc => {
-      if(doc){
-          console.log(doc)
-          res.status(200).json({"creditentials": true, "level": doc.level})
-      }else(res.status(404).json({"creditentials": false}))
+blogRoutes.route('/log').post(function (req, res) {
+    let username = req.body.username;
+    let pw = req.body.password;
+    User.findOne({username: username, password: pw}).then(doc => {
+        if (doc) {
+            res.status(200).json({"creditentials": true, "level": doc.level})
+        } else (res.status(404).json({"creditentials": false}))
     }).catch(err => {
         console.log("Error : ", err);
     });
 })
 
-blogRoutes.route('/add').post(function(req, res) {
-    console.log('hmm');
-    let todo = new Blog(req.query);
+blogRoutes.route('/add').post(function (req, res) {
+    let todo = new Blog(req.body);
     console.log('----------');
-    console.log(todo)
-    let title = req.query.post_title;
+    let title = req.body.post_title;
     todo.save()
         .then(async todo => {
             res.status(200).json({'todo': 'todo added successfully'});
             //sending mails
             // Generate test SMTP service account from ethereal.email
             // Only needed if you don't have a real mail account for testing
-
             let testAccount = await nodemailer.createTestAccount();
-
             // create reusable transporter object using the default SMTP transport
             let transporter = nodemailer.createTransport({
                 host: "smtp.ethereal.email",
@@ -61,7 +53,6 @@ blogRoutes.route('/add').post(function(req, res) {
                     pass: testAccount.pass // generated ethereal password
                 }
             });
-
             // send mail with defined transport object
             let info = await transporter.sendMail({
                 from: '"Philippe Duval" <foo@example.com>', // sender address
@@ -70,10 +61,8 @@ blogRoutes.route('/add').post(function(req, res) {
                 text: "Hello world?", // plain text body
                 html: "My blog has just been updated ! Come check out my latest post <b>" + title + "</b> !" // html body
             });
-
             console.log("Message sent: %s", info.messageId);
             // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
             // Preview only available when sending through an Ethereal account
             console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         })
@@ -84,12 +73,9 @@ blogRoutes.route('/add').post(function(req, res) {
 });
 
 
-blogRoutes.route('/getPost').post(function(req, res)
-{
-    console.log(req.query)
-    Blog.find({_id: req.query._id}).exec()
+blogRoutes.route('/getPost').get(function (req, res) {
+    Blog.find({_id: req.body._id}).exec()
         .then(doc => {
-            console.log(doc)
             res.status(200).json({doc});
         })
         .catch(err => {
@@ -98,25 +84,20 @@ blogRoutes.route('/getPost').post(function(req, res)
 
 });
 
-blogRoutes.route('/getPosts').get(function(req, res)
-{
+blogRoutes.route('/getPosts').get(function (req, res) {
     Blog.find().sort({post_date: -1}).exec()
         .then(doc => {
-            console.log(doc)
             res.status(200).json({doc});
-
         })
         .catch(err => {
             console.log(err)
         })
-
 });
 
-blogRoutes.route('/deletePost').post(function(req, res)
-{
-    Blog.deleteOne({_id: req.query._id}).exec()
+blogRoutes.route('/deletePost').post(function (req, res) {
+    Blog.deleteOne({_id: req.body._id}).exec()
         .then((_) => {
-            res.status(200).json({"Del msg":"document " + req.query.post_title + " has been deleted"});
+            res.status(200).json({"Del msg": "document " + req.query.post_title + " has been deleted"});
 
         })
         .catch(err => {
@@ -145,11 +126,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, (_) => {
     console.log('Server is running on Port: ' + PORT);
-});
-
-app.use((err, req, res, next) => {
-    console.log('sad boi');
-    next();
 });
 
 
