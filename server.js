@@ -5,9 +5,10 @@ const cors = require('cors')
 const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const PORT = 4000;
-const blogRoutes = express.Router();
-let Blog = require('./blog_model')
-let User = require('./user_model');
+const router = express.Router();
+let Post = require('./models/post_model');
+let User = require('./models/user_model');
+let Mail = require('./models/mail_model');
 
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: true, limit: '500mb'}));
@@ -20,7 +21,22 @@ connection.once('open', function () {
     console.log("MongoDB database connection established successfully");
 })
 
-blogRoutes.route('/log').post(function (req, res) {
+/* GET */
+
+router.route('/getPosts').get(function (req, res) {
+    Post.find().sort({post_date: -1}).exec() //check later sort method
+        .then(doc => {
+            res.status(200).json({doc});
+        })
+        .catch(err => {
+            console.log(err)
+        })
+});
+
+
+/* POST */
+
+router.route('/logIn').post(function (req, res) {
     let username = req.body.username;
     let pw = req.body.password;
     User.findOne({username: username, password: pw}).then(doc => {
@@ -32,13 +48,13 @@ blogRoutes.route('/log').post(function (req, res) {
     });
 })
 
-blogRoutes.route('/add').post(function (req, res) {
-    let todo = new Blog(req.body);
+router.route('/addPost').post(function (req, res) {
+    let new_post = new Post(req.body);
     console.log('----------');
     let title = req.body.post_title;
-    todo.save()
-        .then(async todo => {
-            res.status(200).json({'todo': 'todo added successfully'});
+    new_post.save()
+        .then(async res => {
+            res.status(200).json('Post added successfully');
             //sending mails
             // Generate test SMTP service account from ethereal.email
             // Only needed if you don't have a real mail account for testing
@@ -67,38 +83,42 @@ blogRoutes.route('/add').post(function (req, res) {
             console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         })
         .catch(err => {
-            res.status(400).send('adding new todo failed');
+            res.status(400).send('Adding new post failed !');
             console.log(err);
         });
 });
 
-
-blogRoutes.route('/getPost').get(function (req, res) {
-    Blog.find({_id: req.body._id}).exec()
-        .then(doc => {
-            res.status(200).json({doc});
+router.route('/addMail').post(function (req, res) {
+    let new_mail = new Mail(req.body.address);
+    new_mail.save()
+        .then(async res => {
+            res.status(200).json('Mail added successfully');
         })
         .catch(err => {
-            console.log(err)
+            res.status(400).json('Adding new mail failed !');
         })
+})
 
-});
+/* PUT */
 
-blogRoutes.route('/getPosts').get(function (req, res) {
-    Blog.find().sort({post_date: -1}).exec()
-        .then(doc => {
-            res.status(200).json({doc});
+router.route('/putPost').put(function (req, res) {
+    new_mail.save()
+        .then(async res => {
+            res.status(200).json('Mail added successfully');
         })
         .catch(err => {
-            console.log(err)
+            res.status(400).json('Adding new mail failed !');
         })
-});
+})
 
-blogRoutes.route('/deletePost').post(function (req, res) {
-    Blog.deleteOne({_id: req.body._id}).exec()
+
+/* DELETE */
+
+router.route('/deletePost').delete(function (req, res) {
+    console.log(req)
+    Post.deleteOne({_id: req.body._id}).exec()
         .then((_) => {
             res.status(200).json({"Del msg": "document " + req.query.post_title + " has been deleted"});
-
         })
         .catch(err => {
             console.log(err)
@@ -106,7 +126,29 @@ blogRoutes.route('/deletePost').post(function (req, res) {
 
 });
 
-app.use('/blog', blogRoutes);
+router.route('/deleteComment').delete(function (req, res) {
+    let new_mail = new Mail(req.body.address);
+    new_mail.save()
+        .then(async res => {
+            res.status(200).json('Mail added successfully');
+        })
+        .catch(err => {
+            res.status(400).json('Adding new mail failed !');
+        })
+})
+
+router.route('/deleteMail').delete(function (req, res) {
+    let new_mail = new Mail(req.body.address);
+    new_mail.save()
+        .then(async res => {
+            res.status(200).json('Mail added successfully');
+        })
+        .catch(err => {
+            res.status(400).json('Adding new mail failed !');
+        })
+})
+
+app.use('/blog', router);
 
 app.use((err, req, res, next) => {
     // set locals, only providing error in development
