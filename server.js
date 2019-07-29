@@ -24,6 +24,7 @@ connection.once('open', function () {
 /* GET */
 
 router.route('/getPosts').get(function (req, res) {
+    console.log('wot');
     Post.find().sort({post_date: -1}).exec() //check later sort method
         .then(doc => {
             res.status(200).json({doc});
@@ -49,6 +50,7 @@ router.route('/logIn').post(function (req, res) {
 })
 
 router.route('/addPost').post(function (req, res) {
+    console.log(req.body);
     let new_post = new Post(req.body);
     console.log('----------');
     let title = req.body.post_title;
@@ -81,21 +83,22 @@ router.route('/addPost').post(function (req, res) {
             // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
             // Preview only available when sending through an Ethereal account
             console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-        })
-        .catch(err => {
+        }).catch(err => {
             res.status(400).send('Adding new post failed !');
             console.log(err);
         });
 });
 
 router.route('/addMail').post(function (req, res) {
-    let new_mail = new Mail(req.body.address);
-    new_mail.save()
-        .then(async res => {
-            res.status(200).json('Mail added successfully');
+    console.log(req.body.address);
+    let new_mail = new Mail(req.body);
+    new_mail.save().then(res => {
+            console.log("hey")
+            res.status(200).json({"res": res})
         })
         .catch(err => {
-            res.status(400).json('Adding new mail failed !');
+            console.log('wtf')
+            res.status(400).send({"res": 'Adding new mail failed !'});
         })
 })
 
@@ -115,7 +118,7 @@ router.route('/putPost').put(function (req, res) {
 /* DELETE */
 
 router.route('/deletePost').delete(function (req, res) {
-    console.log(req)
+    console.log(req.body);
     Post.deleteOne({_id: req.body._id}).exec()
         .then((_) => {
             res.status(200).json({"Del msg": "document " + req.query.post_title + " has been deleted"});
